@@ -1,0 +1,120 @@
+#!/usr/bin/env bash
+# License: GNU Affero General Public License Version 3 (GNU AGPLv3), (c) 2023, Marc Gilligan <marcg@ulfnic.com>
+
+
+# bashash: An exploratory project for producing rudamentary checksums in BASH
+
+
+
+bashash() {
+	local \
+		bashash__input bashash__checksum_bytes end_options output_as_var
+
+	# Clear output variable to avoid false positives
+	bashash__output=
+
+	while [[ $1 ]]; do
+		if [[ ! $end_options ]]; then
+			case $1 in
+				'--')
+					end_options=1
+					shift; continue ;;
+
+				'-')
+					read -d '' bashash__input
+					shift; continue ;;
+
+				'--text'|'-t')
+					shift; bashash__input=$1
+					shift; continue ;;
+
+				'--input-nameref'|'-n')
+					shift; local -n bashash__input=$1
+					output_as_var=1
+					shift; continue ;;
+
+				'--output-nameref'|'-N')
+					shift; local -n bashash__output=$1
+					output_as_var=1
+					shift; continue ;;
+
+				'--output-as-var'|'-v')
+					output_as_var=1
+					shift
+					continue ;;
+
+				'--checksum-bytes'|'-b')
+					shift; bashash__checksum_bytes=$1
+					shift; continue ;;
+
+				'-'*)
+					printf '%s\n' 'ERROR: bashash, unrecognized parameter: '"$1" 1>&2
+					return 1
+			esac
+		fi
+
+		if [[ -r $1 ]]; then
+			bashash__input=$(cat "$1")
+			shift
+
+		else
+			printf '%s\n' 'ERROR: bashash, file does not exist or is not readable: '"$1" 1>&2
+			return 1
+		fi
+
+	done
+
+	bashash__main
+
+	if [[ ! $output_as_var ]]; then
+		printf '%s\n' "$bashash__output"
+		unset bashash__output
+	fi
+}
+
+
+
+bashash__main() {
+	: ${bashash__checksum_bytes:=16}
+	local \
+		input_len=${#bashash__input} \
+		checksum_arr=() \
+		i i2 dec_int
+
+	# Clear output variable to avoid false positives
+	bashash__output=
+
+	[[ $input_len == '0' ]] && return 1
+
+	# Iterate through each character of the input to build the checksum
+	for (( i = 0; i < input_len; i++ )); do
+
+		# Converting Character into a signed decimal integer
+		printf -v dec_int '%d' "'${bashash__input:i:1}"
+
+		# Prevent non-interacting values of 0
+		(( dec_int++ ))
+
+		# Additively cascade the value of dec_int throughout the checksum_arr
+		# using a modulo operation at each step to confine the result to 1 byte
+		# and avoid arithmetic evaluation memory limits.
+		checksum_arr[0]=$(( ( checksum_arr[0] + dec_int ) % 254 ))
+		for (( i2 = 1; i2 < bashash__checksum_bytes; i2++ )); do
+			checksum_arr[i2]=$(( ( checksum_arr[i2] + checksum_arr[i2-1] ) % 254 ))
+		done
+	done
+
+	# Convert to hex
+	printf -v bashash__output '%02x' "${checksum_arr[@]}"
+}
+
+
+
+# Handle non-interactive use
+if [[ ${BASH_SOURCE[0]} == "${0}" ]]; then
+	set -o errexit
+	{ bashash "$@"; } < /dev/fd/0 || exit $?
+fi
+
+
+
