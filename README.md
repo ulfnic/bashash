@@ -1,5 +1,5 @@
 # bashash
-An exploratory project for producing rudimentary checksums in BASH
+An exploratory project for producing rudimentary checksums in pure BASH
 
 Fully multimodal. Usable as a standalone executable or sourced script, with or without subshells, with or without --options and with or without copying the input and output in memory. *See: Examples of use*
 ```bash
@@ -22,13 +22,16 @@ bashash
   
   # Input
   -t|--text <string>             # Optional: Use value as input
-  -n|--input-nameref VAR_NAME    # Optional: Input from the variable VAR_NAME
+  -n|--input-nameref VAR_NAME    # Optional: Input from variable VAR_NAME (source-dep)
   INPUT_FILE                     # Optional: Read input from INPUT_FILE
   -                              # Optional: Read input from stdin
   
   # Output
-  -N|--output-nameref VAR_NAME   # Optional: Output to the variable VAR_NAME
-  -v|--output-as-var             # Optional: Output to variable bashash__output
+  -N|--output-nameref VAR_NAME   # Optional: Output to variable VAR_NAME (source-dep)
+  -v|--output-as-var             # Optional: Output to variable bashash__output (source-dep)
+
+
+source-dep: the script must be sourced to use this feature
 ```
 
 ## Examples of use
@@ -59,14 +62,14 @@ text_str='Some Text'
 bashash --input-nameref 'text_str'
 # Output: 688ce7f66dfbe463623c91aa17a1081b
 
-# Output to bashash__output
-bashash --text 'Some Text' --output-as-var
-printf '%s\n' "$bashash__output"
-# Output: 688ce7f66dfbe463623c91aa17a1081b
-
 # Output to a specific variable
 bashash --text 'Some Text' --output-nameref 'my_output'
 printf '%s\n' "$my_output"
+# Output: 688ce7f66dfbe463623c91aa17a1081b
+
+# Output to bashash__output
+bashash --text 'Some Text' --output-as-var
+printf '%s\n' "$bashash__output"
 # Output: 688ce7f66dfbe463623c91aa17a1081b
 
 # Skip the option wrapper and use bashash__main directly
