@@ -110,7 +110,7 @@ bashash__main() {
 
 
 
-# Handle non-interactive use
+# If executed directly (not sourced), pass params and stdin to wrapper
 if [[ ${BASH_SOURCE[0]} == "${0}" ]]; then
 	set -o errexit
 	{ bashash "$@"; } < /dev/fd/0 || exit $?
