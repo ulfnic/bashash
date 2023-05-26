@@ -8,7 +8,10 @@
 
 bashash() {
 	local \
-		bashash__input bashash__checksum_bytes end_options output_as_var
+		bashash__input \
+		bashash__checksum_bytes \
+		output_as_var \
+		end_options
 
 	# Clear output variable to avoid false positives
 	bashash__output=
@@ -25,27 +28,26 @@ bashash() {
 					shift; continue ;;
 
 				'--text'|'-t')
-					shift; bashash__input=$1
-					shift; continue ;;
+					bashash__input=$2
+					shift 2; continue ;;
 
 				'--input-nameref'|'-n')
-					shift; local -n bashash__input=$1
+					local -n bashash__input=$2
 					output_as_var=1
-					shift; continue ;;
+					shift 2; continue ;;
 
 				'--output-nameref'|'-N')
-					shift; local -n bashash__output=$1
+					local -n bashash__output=$2
 					output_as_var=1
-					shift; continue ;;
+					shift 2; continue ;;
 
 				'--output-as-var'|'-v')
 					output_as_var=1
-					shift
-					continue ;;
+					shift; continue ;;
 
 				'--checksum-bytes'|'-b')
-					shift; bashash__checksum_bytes=$1
-					shift; continue ;;
+					bashash__checksum_bytes=$2
+					shift 2; continue ;;
 
 				'-'*)
 					printf '%s\n' 'ERROR: bashash, unrecognized parameter: '"$1" 1>&2
@@ -68,10 +70,11 @@ bashash() {
 	# Variables are set, create checksum
 	bashash__main
 
-	if [[ ! $output_as_var ]]; then
-		printf '%s\n' "$bashash__output"
-		unset bashash__output
-	fi
+	# Return early if the output method is variable bashash__output, otherwise print and unset it
+	[[ $output_as_var ]] && return 0
+
+	printf '%s\n' "$bashash__output"
+	unset bashash__output
 }
 
 
