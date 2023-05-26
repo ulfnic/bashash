@@ -70,7 +70,7 @@ bashash() {
 	# Variables are set, create checksum
 	bashash__main
 
-	# Return early if the output method is variable bashash__output, otherwise print and unset it
+	# Return early if the output method is a variable, otherwise print and unset it
 	[[ $output_as_var ]] && return 0
 
 	printf '%s\n' "$bashash__output"
@@ -101,8 +101,8 @@ bashash__main() {
 		(( dec_int++ ))
 
 		# Additively cascade the value of dec_int through the array checksum_arr
-		# using a modulo operation at each step to confine the result to 1 byte
-		# and avoid arithmetic evaluation memory limits.
+		# using a modulo operation at each step to confine the result to the numerical
+		# representation of one byte and avoid arithmetic evaluation memory limits.
 		checksum_arr[0]=$(( ( checksum_arr[0] + dec_int ) % 254 ))
 		for (( i2 = 1; i2 < bashash__checksum_bytes; i2++ )); do
 			checksum_arr[i2]=$(( ( checksum_arr[i2] + checksum_arr[i2-1] ) % 254 ))
