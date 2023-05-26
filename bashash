@@ -2,7 +2,7 @@
 # License: GNU Affero General Public License Version 3 (GNU AGPLv3), (c) 2023, Marc Gilligan <marcg@ulfnic.com>
 
 
-# bashash: An exploratory project for producing rudimentary checksums in BASH
+# bashash: An exploratory project for producing rudimentary checksums in pure BASH
 
 
 
@@ -53,6 +53,7 @@ bashash() {
 			esac
 		fi
 
+		# Parameter wasn't caught as an option, treat it as an input file
 		if [[ -r $1 ]]; then
 			read -d '' bashash__input < "$1"
 			shift
@@ -64,6 +65,7 @@ bashash() {
 
 	done
 
+	# Variables are set, create checksum
 	bashash__main
 
 	if [[ ! $output_as_var ]]; then
@@ -86,16 +88,16 @@ bashash__main() {
 
 	[[ $input_len == '0' ]] && return 1
 
-	# Iterate through each character of the input to build the checksum
+	# Iterate through each character of the input
 	for (( i = 0; i < input_len; i++ )); do
 
-		# Converting Character into a signed decimal integer
+		# Convert character into a signed decimal integer
 		printf -v dec_int '%d' "'${bashash__input:i:1}"
 
 		# Prevent non-interacting values of 0
 		(( dec_int++ ))
 
-		# Additively cascade the value of dec_int throughout the checksum_arr
+		# Additively cascade the value of dec_int through the array checksum_arr
 		# using a modulo operation at each step to confine the result to 1 byte
 		# and avoid arithmetic evaluation memory limits.
 		checksum_arr[0]=$(( ( checksum_arr[0] + dec_int ) % 254 ))
@@ -110,7 +112,7 @@ bashash__main() {
 
 
 
-# If executed directly (not sourced), pass params and stdin to wrapper
+# If executed directly (not sourced), pass parameters and stdin to function bashash
 if [[ ${BASH_SOURCE[0]} == "${0}" ]]; then
 	set -o errexit
 	{ bashash "$@"; } < /dev/fd/0 || exit $?
