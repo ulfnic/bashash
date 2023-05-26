@@ -54,7 +54,7 @@ bashash() {
 		fi
 
 		if [[ -r $1 ]]; then
-			bashash__input=$(cat "$1")
+			read -d '' bashash__input < "$1"
 			shift
 
 		else
