@@ -10,61 +10,61 @@ bashash() {
 	local \
 		bashash__input \
 		bashash__checksum_bytes \
-		output_as_var \
-		end_options
+		output_as_var
 
 	# Clear output variable to avoid false positives
 	bashash__output=
 
+	read_input_file() {
+		[[ -r $1 ]] && read -d '' bashash__input < "$1" && return 0
+		printf '%s\n' 'ERROR: bashash, failed to read file: '"$1" 1>&2
+		return 1
+	}
+
 	while [[ $1 ]]; do
-		if [[ ! $end_options ]]; then
-			case $1 in
-				'--')
-					end_options=1
-					shift; continue ;;
+		case $1 in
+			'--')
+				shift; break ;;
 
-				'-')
-					read -d '' bashash__input
-					shift; continue ;;
+			'-')
+				read -d '' bashash__input
+				shift; continue ;;
 
-				'--text'|'-t')
-					bashash__input=$2
-					shift 2; continue ;;
+			'--text'|'-t')
+				bashash__input=$2
+				shift 2; continue ;;
 
-				'--input-nameref'|'-n')
-					local -n bashash__input=$2
-					output_as_var=1
-					shift 2; continue ;;
+			'--input-nameref'|'-n')
+				local -n bashash__input=$2
+				output_as_var=1
+				shift 2; continue ;;
 
-				'--output-nameref'|'-N')
-					local -n bashash__output=$2
-					output_as_var=1
-					shift 2; continue ;;
+			'--output-nameref'|'-N')
+				local -n bashash__output=$2
+				output_as_var=1
+				shift 2; continue ;;
 
-				'--output-as-var'|'-v')
-					output_as_var=1
-					shift; continue ;;
+			'--output-as-var'|'-v')
+				output_as_var=1
+				shift; continue ;;
 
-				'--checksum-bytes'|'-b')
-					bashash__checksum_bytes=$2
-					shift 2; continue ;;
+			'--checksum-bytes'|'-b')
+				bashash__checksum_bytes=$2
+				shift 2; continue ;;
 
-				'-'*)
-					printf '%s\n' 'ERROR: bashash, unrecognized parameter: '"$1" 1>&2
-					return 1
-			esac
-		fi
+			'-'*)
+				printf '%s\n' 'ERROR: bashash, unrecognized parameter: '"$1" 1>&2
+				return 1 ;;
 
-		# Parameter wasn't caught as an option, treat it as an input file
-		if [[ -r $1 ]]; then
-			read -d '' bashash__input < "$1"
-			shift
+			*)
+				read_input_file "$1" || return $?
+				shift; continue ;;
+		esac
+	done
 
-		else
-			printf '%s\n' 'ERROR: bashash, file does not exist or is not readable: '"$1" 1>&2
-			return 1
-		fi
-
+	while [[ $1 ]]; do
+		read_input_file "$1" || return $?
+		shift
 	done
 
 	# Variables are set, create checksum
