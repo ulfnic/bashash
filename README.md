@@ -17,6 +17,7 @@ sudo chmod +x /usr/local/bin/bashash
 ```bash
 bashash
   # Special
+  -h|--help                      # Optional: Output help
   -b|--checksum-bytes            # Optional: (default: 16) Size of the checksum in bytes
   --                             # Optional: End processing of options
   
