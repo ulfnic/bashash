@@ -2,7 +2,41 @@
 # License: GNU Affero General Public License Version 3 (GNU AGPLv3), (c) 2023, Marc Gilligan <marcg@ulfnic.com>
 
 
-# bashash: An exploratory project for producing rudimentary checksums in pure BASH
+bashash__help_doc (){
+	cat <<-'HelpDoc' 1>&2
+		# Options:
+		  # Special:
+		    -h|--help                      # Optional: Output help
+		    -b|--checksum-bytes            # Optional: (default: 16) Size of the checksum in bytes
+		    --                             # Optional: End processing of options
+
+		  # Input:
+		    -t|--text STRING               # Optional: Use STRING as input
+		    -n|--input-nameref VAR_NAME    # Optional: Input from variable VAR_NAME (source-dep)
+		    INPUT_FILE                     # Optional: Read input from INPUT_FILE
+		    -                              # Optional: Read input from stdin
+
+		  # Output:
+		    -N|--output-nameref VAR_NAME   # Optional: Output to variable VAR_NAME (source-dep)
+		    -v|--output-as-var             # Optional: Output to variable bashash__output (source-dep)
+
+		  # (source-dep) means the script must be sourced to use this feature
+
+		# Examples:
+		  # Sourced or as a standalone executable:
+		    bashash ./file.txt
+
+		    printf '%s' 'Some Text' | bashash -
+
+		  # Sourced:
+		    text_str='Some Text'
+		    bashash --input-nameref 'text_str'
+
+		    bashash__input='Some Text' bashash__checksum_bytes=8 bashash__main
+		    printf '%s\n' "$bashash__output"
+
+	HelpDoc
+}
 
 
 
@@ -20,6 +54,11 @@ bashash() {
 		printf '%s\n' 'ERROR: bashash, failed to read file: '"$1" 1>&2
 		return 1
 	}
+
+	if [[ ! $1 ]]; then
+		bashash__help_doc
+		return 0
+	fi
 
 	while [[ $1 ]]; do
 		case $1 in
@@ -51,6 +90,10 @@ bashash() {
 			'--checksum-bytes'|'-b')
 				bashash__checksum_bytes=$2
 				shift 2; continue ;;
+
+			'--help'|'-h')
+				bashash__help_doc
+				return 0 ;;
 
 			'-'*)
 				printf '%s\n' 'ERROR: bashash, unrecognized parameter: '"$1" 1>&2
