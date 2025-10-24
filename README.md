@@ -77,6 +77,3 @@ bashash__input='Some Text' bashash__checksum_bytes=8 bashash__main
 printf '%s\n' "$bashash__output"
 # stdout: 688ce7f66dfbe463
 ```
-
-## License
-Licensed under GNU Affero General Public License v3. See LICENSE for details.
